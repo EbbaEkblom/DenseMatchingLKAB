@@ -1,11 +1,14 @@
+import os
 import numpy as np
 import cv2
 import torch
 import torch.nn as nn
 from packaging import version
+from PIL import Image
+import matplotlib.pyplot as plt
 
 
-def remap_using_flow_fields(image, disp_x, disp_y, interpolation=cv2.INTER_LINEAR, border_mode=cv2.BORDER_CONSTANT):
+def remap_using_flow_fields(args, image, disp_x, disp_y, interpolation=cv2.INTER_LINEAR, border_mode=cv2.BORDER_CONSTANT):
     """
     Opencv remap
     map_x contains the index of the matching horizontal position of each pixel [i,j] while map_y contains the
@@ -28,8 +31,20 @@ def remap_using_flow_fields(image, disp_x, disp_y, interpolation=cv2.INTER_LINEA
                        np.linspace(0, h_scale - 1, h_scale))
     map_x = (X+disp_x).astype(np.float32)
     map_y = (Y+disp_y).astype(np.float32)
-    remapped_image = cv2.remap(image, map_x, map_y, interpolation=interpolation, borderMode=border_mode)
 
+    remapped_image = cv2.remap(image, map_x, map_y, interpolation=interpolation, borderMode=border_mode)
+    
+    
+    if args.save_mapping:
+        name_query = args.path_query_image.split('/')[-1].split('.')[0]
+        if not os.path.exists(args.save_dir + '/' + name_query):
+            os.mkdir(args.save_dir + '/' + name_query)
+
+        np.savetxt("{}/map_x.csv".format(args.save_dir + '/' + name_query), np.floor(map_x), delimiter=",")
+        np.savetxt("{}/map_y.csv".format(args.save_dir + '/' + name_query), np.floor(map_y), delimiter=",")
+        np.savetxt("{}/field_x.csv".format(args.save_dir + '/' + name_query), disp_x, delimiter=",")
+        np.savetxt("{}/field_y.csv".format(args.save_dir + '/' + name_query), disp_y, delimiter=",")
+            
     return remapped_image
 
 

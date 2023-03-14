@@ -77,8 +77,8 @@ def test_model_on_image_pair(args, query_image, reference_image):
         estimated_flow_numpy = estimated_flow.squeeze().permute(1, 2, 0).cpu().numpy()
         estimated_flow_numpy = estimated_flow_numpy[:ref_image_shape[0], :ref_image_shape[1]]
         # removes the padding
-
-        warped_query_image = remap_using_flow_fields(query_image, estimated_flow_numpy[:, :, 0],
+        
+        warped_query_image = remap_using_flow_fields(args, query_image, estimated_flow_numpy[:, :, 0],
                                                      estimated_flow_numpy[:, :, 1]).astype(np.uint8)
 
         # save images
@@ -113,6 +113,13 @@ def test_model_on_image_pair(args, query_image, reference_image):
         axis[3].set_title('Estimated flow {}_{}'.format(args.model, args.pre_trained_model))
         fig.savefig(
             os.path.join(args.save_dir, 'Warped_query_image_{}_{}.png'.format(args.model, args.pre_trained_model)),
+            #os.path.join(args.save_dir, args.path_query_image[19:]),
+            bbox_inches='tight')
+        
+        if args.save_mapping:
+            name_query = args.path_query_image.split('/')[-1].split('.')[0]
+            fig.savefig(
+            os.path.join(args.save_dir, name_query),
             bbox_inches='tight')
         plt.close(fig)
         print('Saved image!')
@@ -129,7 +136,8 @@ if __name__ == "__main__":
     parser.add_argument('--save_dir', type=str, required=True,
                         help='Directory where to save output figure.')
     parser.add_argument('--save_ind_images', dest='save_ind_images',  default=False, type=boolean_string,
-                        help='Save individual images? ')
+                        help='Save individual images? ') 
+    parser.add_argument('--save_mapping', action = 'store_true', help='Saves the mapping matrices for 3D computations')
     args = parser.parse_args()
 
     torch.cuda.empty_cache()
